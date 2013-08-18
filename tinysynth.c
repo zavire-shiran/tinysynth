@@ -108,11 +108,11 @@ const double pi = 3.141592653589793238462643383279502;
 
 int main(int argc, char** argv) {
   FILE* outfile = fopen("sound.aiff", "w");
-  writeAiffHeader(outfile, 1, 44100, 16, 44100.0);
-  const double tau = 2 * pi;
+  /*writeAiffHeader(outfile, 1, 44100, 16, 44100.0);*/
+  const double freq = 440;
 
   for(int i = 0; i < 44100; ++i) {
-    int16_t signal = sin(tau * (i / 44100.0)) * 1000;
+    int16_t signal = sin(i * (pi * (freq / 44100.0))) * 100;
     fwrite(&signal, 1, sizeof(signal), outfile);
   }
 }
