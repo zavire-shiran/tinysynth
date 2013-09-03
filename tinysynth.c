@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+#include <endian.h>
 
 typedef int8_t ID[4];
 typedef long double extended;
@@ -105,14 +106,78 @@ void writeAiffHeader(FILE* outfile,
 
 const double pi = 3.141592653589793238462643383279502;
 
+const int32_t sample_rate = 44100;
+
+typedef enum _oscillator_type {
+  SQUARE,
+  SAWTOOTH,
+  TRIANGLE,
+  SINE,
+  FM
+} oscillator_type;
+
+typedef struct _oscillator {
+  oscillator_type type;
+  uint32_t phase;
+  int16_t frequency;
+} oscillator;
+
+int32_t generate_next_sample(oscillator* osc, int32_t gain) {
+  osc->phase += ((UINT32_MAX / sample_rate) * osc->frequency);
+
+  switch(osc->type) {
+  case SQUARE:
+    if(osc->phase > (UINT32_MAX / 2)) {
+      return gain;
+    } else {
+      return -gain;
+    }
+    break;
+
+  case SAWTOOTH:
+    return (int32_t)round((float)osc->phase / UINT32_MAX * gain);
+    break;
+
+  case TRIANGLE:
+    {
+      int32_t p = 0;
+      if(osc->phase < (UINT32_MAX / 2)) {
+	p = UINT32_MAX / 2 - osc->phase;      
+      } else {
+	p = osc->phase -  UINT32_MAX / 2;
+      }
+      return round(gain * ((float)p - INT32_MAX / 2) / (INT32_MAX / 2));
+    }
+    break;
+
+  case SINE:
+    return (int32_t)roundf(sinf(2 * pi * ((float)osc->phase / UINT32_MAX)) * gain);
+    break;
+
+  case FM:
+    /* AHAHAHAHAHAHAH */
+    return 0;
+    break;
+
+  default:
+    return 0;
+    break;
+  };
+}
 
 int main(int argc, char** argv) {
-  FILE* outfile = fopen("sound.aiff", "w");
+  FILE* outfile = fopen("sound.s32", "w");
   /*writeAiffHeader(outfile, 1, 44100, 16, 44100.0);*/
-  const double freq = 440;
 
-  for(int i = 0; i < 44100; ++i) {
-    int16_t signal = sin(i * (pi * (freq / 44100.0))) * 100;
+  oscillator osc;
+  osc.type = TRIANGLE;
+  osc.phase = 0;
+  osc.frequency = 440;
+
+  for(int i = 0; i < 441000; ++i) {
+    int32_t signal = generate_next_sample(&osc, 300000000);
     fwrite(&signal, 1, sizeof(signal), outfile);
   }
+
+  fclose(outfile);
 }
