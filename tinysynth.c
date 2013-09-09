@@ -135,6 +135,7 @@ int32_t generate_next_sample(oscillator* osc, int32_t gain) {
     break;
 
   case SAWTOOTH:
+    /* This isn't right, because it only goes from 0 to gain, not -gain to gain. */
     return (int32_t)round((float)osc->phase / UINT32_MAX * gain);
     break;
 
@@ -164,6 +165,17 @@ int32_t generate_next_sample(oscillator* osc, int32_t gain) {
     break;
   };
 }
+
+typedef struct _measure {
+
+} measure;
+
+typedef struct _composition {
+  int32_t num_measures;
+  measure* measures;
+  int16_t tempo; /* in beats per minute */
+  
+} composition;
 
 int main(int argc, char** argv) {
   FILE* outfile = fopen("sound.s32", "w");
