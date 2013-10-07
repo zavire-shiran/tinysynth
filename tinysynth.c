@@ -135,8 +135,7 @@ int32_t generate_next_sample(oscillator* osc, int32_t gain) {
 	break;
 
     case SAWTOOTH:
-	/* This isn't right, because it only goes from 0 to gain, not -gain to gain. */
-	return (int32_t)round((float)osc->phase / UINT32_MAX * gain);
+	return (int32_t)round(((float)osc->phase / UINT32_MAX - 0.5) * gain);
 	break;
 
     case TRIANGLE:
@@ -182,7 +181,7 @@ int main(int argc, char** argv) {
     /*writeAiffHeader(outfile, 1, 44100, 16, 44100.0);*/
 
     oscillator osc;
-    osc.type = TRIANGLE;
+    osc.type = SAWTOOTH;
     osc.phase = 0;
     osc.frequency = 440;
 
