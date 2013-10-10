@@ -319,23 +319,16 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
 }
 
 void populate_test_section(section* sec) {
-    sec->tempo = 120;
+    sec->tempo = 240;
     sec->num_instruments = 4;
-    sec->num_notes = 32;
+    sec->num_notes = 34;
     sec->instruments = calloc(sizeof(instrument), 4);
 
     for(int i = 0; i < 4; ++i) {
-        sec->instruments[i].notes = calloc(sizeof(note), 32);
-        for(int j = 0; j < 32; ++j) {
+        sec->instruments[i].notes = calloc(sizeof(note), 34);
+        for(int j = 0; j < 34; ++j) {
             sec->instruments[i].notes[j].pitch = 255;
-            if(i == 0) {
-                sec->instruments[i].notes[j].gain = 24;
-            } else if(i == 1 || i == 2) {
-                sec->instruments[i].notes[j].gain = 22;
-            } else if(i == 3) {
-                sec->instruments[i].notes[j].gain = 20;
-            }
-
+            sec->instruments[i].notes[j].gain = 25;
         }
     }
 
@@ -345,14 +338,50 @@ void populate_test_section(section* sec) {
     sec->instruments[3].type = TRIANGLE;
 
     sec->instruments[0].notes[0].pitch = 48;
+    sec->instruments[0].notes[2].pitch = 55;
+    sec->instruments[0].notes[4].pitch = 48;
+    sec->instruments[0].notes[6].pitch = 55;
+    sec->instruments[0].notes[8].pitch = 48;
+    sec->instruments[0].notes[10].pitch = 55;
+    sec->instruments[0].notes[12].pitch = 48;
+    sec->instruments[0].notes[14].pitch = 55;
+    sec->instruments[0].notes[16].pitch = 48;
+    sec->instruments[0].notes[18].pitch = 55;
+    sec->instruments[0].notes[20].pitch = 48;
+    sec->instruments[0].notes[22].pitch = 55;
+    sec->instruments[0].notes[24].pitch = 48;
+    sec->instruments[0].notes[26].pitch = 55;
+    sec->instruments[0].notes[28].pitch = 48;
+    sec->instruments[0].notes[30].pitch = 55;
+    sec->instruments[0].notes[32].pitch = 48;
 
-    sec->instruments[0].notes[8].pitch = 60;
+    sec->instruments[1].notes[0].pitch = 60;
+    sec->instruments[1].notes[1].pitch = 62;
+    sec->instruments[1].notes[2].pitch = 64;
+    sec->instruments[1].notes[3].pitch = 62;
+    sec->instruments[1].notes[4].pitch = 60;
+    sec->instruments[1].notes[5].pitch = 62;
+    sec->instruments[1].notes[6].pitch = 64;
+    sec->instruments[1].notes[7].pitch = 62;
+    sec->instruments[1].notes[8].pitch = 60;
+    sec->instruments[1].notes[10].pitch = 67;
+    sec->instruments[1].notes[15].pitch = 0;
+    sec->instruments[1].notes[16].pitch = 67;
+    sec->instruments[1].notes[17].pitch = 65;
+    sec->instruments[1].notes[18].pitch = 64;
+    sec->instruments[1].notes[19].pitch = 65;
+    sec->instruments[1].notes[20].pitch = 67;
+    sec->instruments[1].notes[21].pitch = 65;
+    sec->instruments[1].notes[22].pitch = 64;
+    sec->instruments[1].notes[23].pitch = 65;
+    sec->instruments[1].notes[24].pitch = 67;
+    sec->instruments[1].notes[26].pitch = 60;
+    sec->instruments[1].notes[27].pitch = 0;
+    sec->instruments[1].notes[28].pitch = 60;
 
-    sec->instruments[1].notes[0].pitch = 55;
+    sec->instruments[2].notes[0].pitch = 0;
 
-    sec->instruments[2].notes[0].pitch = 64;
-
-    sec->instruments[3].notes[0].pitch = 72;
+    sec->instruments[3].notes[0].pitch = 0;
 }
 
 int main(int argc, char** argv) {
