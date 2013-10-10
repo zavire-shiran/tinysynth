@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
-#include <endian.h>
 
 const double pi = 3.141592653589793238462643383279502;
 
