@@ -39,48 +39,48 @@ typedef struct {
 }  SoundDataChunk;
 
 uint32_t computeFileSize(int16_t numChannels,
-			 uint32_t numSampleFrames,
-			 int16_t sampleSize) {
+                         uint32_t numSampleFrames,
+                         int16_t sampleSize) {
     /* converting from bits to bytes */
     if (sampleSize <= 8) {
-	sampleSize = 1;
+        sampleSize = 1;
     } else if (sampleSize <= 16) {
-	sampleSize = 2;
+        sampleSize = 2;
     } else if (sampleSize <= 24) {
-	sampleSize = 3;
+        sampleSize = 3;
     } else if (sampleSize <= 32) {
-	sampleSize = 4;
+        sampleSize = 4;
     }
   
     return
-	4 + /*fileType size*/
-	26 + /*Common chunk size*/
-	16 + /*SoundData chunk header size*/
-	numChannels * numSampleFrames * sampleSize; /*sound data size*/
+        4 + /*fileType size*/
+        26 + /*Common chunk size*/
+        16 + /*SoundData chunk header size*/
+        numChannels * numSampleFrames * sampleSize; /*sound data size*/
 }
 
 uint32_t computeSoundChunkSize(int16_t numChannels,
-			       uint32_t numSampleFrames,
-			       int16_t sampleSize) {
+                               uint32_t numSampleFrames,
+                               int16_t sampleSize) {
     /* converting from bits to bytes */
     if (sampleSize <= 8) {
-	sampleSize = 1;
+        sampleSize = 1;
     } else if (sampleSize <= 16) {
-	sampleSize = 2;
+        sampleSize = 2;
     } else if (sampleSize <= 24) {
-	sampleSize = 3;
+        sampleSize = 3;
     } else if (sampleSize <= 32) {
-	sampleSize = 4;
+        sampleSize = 4;
     }
  
     return 8 + numChannels * numSampleFrames * sampleSize;
 }
 
 void writeAiffHeader(FILE* outfile,
-		     int16_t numChannels,
-		     uint32_t numSampleFrames,
-		     int16_t sampleSize,
-		     extended sampleRate) {
+                     int16_t numChannels,
+                     uint32_t numSampleFrames,
+                     int16_t sampleSize,
+                     extended sampleRate) {
     uint32_t filesize = computeFileSize(numChannels, numSampleFrames, sampleSize);
     uint32_t commonChunkSize = 18; /* fixed size */
     uint32_t soundDataChunkSize = computeSoundChunkSize(numChannels, numSampleFrames, sampleSize);
@@ -151,38 +151,38 @@ const int32_t freqtable[] = {0, 8, 9, 9, 10, 10, 11, 12, 12, 13, 14, 15, 16,
                              19245614};
 
 const int32_t gaintable[] = {0,
-			     0x10000,
-			     0x18000,
-			     0x20000,
-			     0x30000,
-			     0x40000,
-			     0x60000,
-			     0x80000,
-			     0xc0000,
-			     0x100000,
-			     0x180000,
-			     0x200000,
-			     0x300000,
-			     0x400000,
-			     0x600000,
-			     0x800000,
-			     0xc00000,
-			     0x1000000,
-			     0x1800000,
-			     0x2000000,
-			     0x3000000,
-			     0x4000000,
-			     0x6000000,
-			     0x8000000,
-			     0xc000000,
-			     0x10000000,
-			     0x18000000,
-			     0x20000000,
-			     0x30000000,
-			     0x40000000,
-			     0x60000000,
-			     0x80000000,
-			     0xc0000000};
+                             0x10000,
+                             0x18000,
+                             0x20000,
+                             0x30000,
+                             0x40000,
+                             0x60000,
+                             0x80000,
+                             0xc0000,
+                             0x100000,
+                             0x180000,
+                             0x200000,
+                             0x300000,
+                             0x400000,
+                             0x600000,
+                             0x800000,
+                             0xc00000,
+                             0x1000000,
+                             0x1800000,
+                             0x2000000,
+                             0x3000000,
+                             0x4000000,
+                             0x6000000,
+                             0x8000000,
+                             0xc000000,
+                             0x10000000,
+                             0x18000000,
+                             0x20000000,
+                             0x30000000,
+                             0x40000000,
+                             0x60000000,
+                             0x80000000,
+                             0xc0000000};
 
 typedef enum _oscillator_type {
     SQUARE,
@@ -203,41 +203,41 @@ int32_t generate_next_osc_sample(oscillator* osc, int32_t gain) {
 
     switch(osc->type) {
     case SQUARE:
-	if(osc->phase > (UINT32_MAX / 2)) {
-	    return gain;
-	} else {
-	    return -gain;
-	}
-	break;
+        if(osc->phase > (UINT32_MAX / 2)) {
+            return gain;
+        } else {
+            return -gain;
+        }
+        break;
 
     case SAWTOOTH:
-	return (int32_t)round(((float)osc->phase / UINT32_MAX - 0.5) * gain);
-	break;
+        return (int32_t)round(((float)osc->phase / UINT32_MAX - 0.5) * gain);
+        break;
 
     case TRIANGLE:
     {
-	int32_t p = 0;
-	if(osc->phase < (UINT32_MAX / 2)) {
-	    p = UINT32_MAX / 2 - osc->phase;      
-	} else {
-	    p = osc->phase -  UINT32_MAX / 2;
-	}
-	return round(gain * ((float)p - INT32_MAX / 2) / (INT32_MAX / 2));
+        int32_t p = 0;
+        if(osc->phase < (UINT32_MAX / 2)) {
+            p = UINT32_MAX / 2 - osc->phase;      
+        } else {
+            p = osc->phase -  UINT32_MAX / 2;
+        }
+        return round(gain * ((float)p - INT32_MAX / 2) / (INT32_MAX / 2));
     }
     break;
 
     case SINE:
-	return (int32_t)roundf(sinf(2 * pi * ((float)osc->phase / UINT32_MAX)) * gain);
-	break;
+        return (int32_t)roundf(sinf(2 * pi * ((float)osc->phase / UINT32_MAX)) * gain);
+        break;
 
     case FM:
-	/* AHAHAHAHAHAHAH */
-	return 0;
-	break;
+        /* AHAHAHAHAHAHAH */
+        return 0;
+        break;
 
     default:
-	return 0;
-	break;
+        return 0;
+        break;
     };
 }
 
@@ -284,35 +284,35 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
     int8_t i;
 
     for(i = 0; i < os->num_oscillators && i < sec->num_instruments; ++i) {
-	if(os->oscillators[i].frequency != 0) {
-	    ret += generate_next_osc_sample(os->oscillators + i,
-					    gaintable[sec->instruments[i].notes[os->note_num].gain]);
-	}
+        if(os->oscillators[i].frequency != 0) {
+            ret += generate_next_osc_sample(os->oscillators + i,
+                                            gaintable[sec->instruments[i].notes[os->note_num].gain]);
+        }
     }
 
     ++os->sample_num;
     if(os->sample_num >= ((sample_rate * 60) / sec->tempo)) {
-	++os->note_num;
-	printf("note %d\n", os->note_num);
-	os->sample_num = 0;
+        ++os->note_num;
+        printf("note %d\n", os->note_num);
+        os->sample_num = 0;
 
-	if(os->note_num >= sec->num_notes) {
-	    os->is_playing = 0;
-	} else {
-	    for(i = 0; i < os->num_oscillators; ++i) {
-		if(i >= sec->num_instruments) {
-		    printf("osc %d silence\n", i);
-		    os->oscillators[i].frequency = 0;
-		    os->oscillators[i].phase = 0;
-		} else if(sec->instruments[i].notes[os->note_num].pitch != 255) {
-		    uint8_t pitch = sec->instruments[i].notes[os->note_num].pitch;
-		    uint8_t gain = sec->instruments[i].notes[os->note_num].gain;
-		    printf("osc %d pitch %d gain %d\n", i, pitch, gain);
-		    os->oscillators[i].frequency = freqtable[pitch];
-		    os->oscillators[i].phase = 0;
-		}
-	    }
-	}
+        if(os->note_num >= sec->num_notes) {
+            os->is_playing = 0;
+        } else {
+            for(i = 0; i < os->num_oscillators; ++i) {
+                if(i >= sec->num_instruments) {
+                    printf("osc %d silence\n", i);
+                    os->oscillators[i].frequency = 0;
+                    os->oscillators[i].phase = 0;
+                } else if(sec->instruments[i].notes[os->note_num].pitch != 255) {
+                    uint8_t pitch = sec->instruments[i].notes[os->note_num].pitch;
+                    uint8_t gain = sec->instruments[i].notes[os->note_num].gain;
+                    printf("osc %d pitch %d gain %d\n", i, pitch, gain);
+                    os->oscillators[i].frequency = freqtable[pitch];
+                    os->oscillators[i].phase = 0;
+                }
+            }
+        }
     }
 
     return ret;
@@ -325,18 +325,18 @@ void populate_test_section(section* sec) {
     sec->instruments = calloc(sizeof(instrument), 4);
 
     for(int i = 0; i < 4; ++i) {
-	sec->instruments[i].notes = calloc(sizeof(note), 32);
-	for(int j = 0; j < 32; ++j) {
-	    sec->instruments[i].notes[j].pitch = 255;
-	    if(i == 0) {
-		sec->instruments[i].notes[j].gain = 24;
-	    } else if(i == 1 || i == 2) {
-		sec->instruments[i].notes[j].gain = 22;
-	    } else if(i == 3) {
-		sec->instruments[i].notes[j].gain = 20;
-	    }
+        sec->instruments[i].notes = calloc(sizeof(note), 32);
+        for(int j = 0; j < 32; ++j) {
+            sec->instruments[i].notes[j].pitch = 255;
+            if(i == 0) {
+                sec->instruments[i].notes[j].gain = 24;
+            } else if(i == 1 || i == 2) {
+                sec->instruments[i].notes[j].gain = 22;
+            } else if(i == 3) {
+                sec->instruments[i].notes[j].gain = 20;
+            }
 
-	}
+        }
     }
 
     sec->instruments[0].type = TRIANGLE;
@@ -364,17 +364,17 @@ int main(int argc, char** argv) {
     populate_test_section(&sec);
 
     for(int i = 0; i < os->num_oscillators && i < sec.num_instruments; ++i) {
-	os->oscillators[i].type = sec.instruments[i].type;
-	uint8_t pitch = sec.instruments[i].notes[os->note_num].pitch;
-	uint8_t gain = sec.instruments[i].notes[os->note_num].gain;
-	printf("osc %d pitch %d gain %d\n", i, pitch, gain);
-	os->oscillators[i].frequency = freqtable[pitch];
-	os->oscillators[i].phase = 0;
+        os->oscillators[i].type = sec.instruments[i].type;
+        uint8_t pitch = sec.instruments[i].notes[os->note_num].pitch;
+        uint8_t gain = sec.instruments[i].notes[os->note_num].gain;
+        printf("osc %d pitch %d gain %d\n", i, pitch, gain);
+        os->oscillators[i].frequency = freqtable[pitch];
+        os->oscillators[i].phase = 0;
     }
 
     while(os->is_playing) {
-	int32_t signal = generate_next_section_sample(os, &sec);
-	fwrite(&signal, 1, sizeof(signal), outfile);
+        int32_t signal = generate_next_section_sample(os, &sec);
+        fwrite(&signal, 1, sizeof(signal), outfile);
     }
 
     fclose(outfile);
