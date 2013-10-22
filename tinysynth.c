@@ -177,19 +177,37 @@ output_state* create_output_state(int8_t num_oscillators) {
     return ret;
 }
 
+const int16_t envelope_size = 40;
+
 int32_t generate_next_section_sample(output_state* os, section* sec) {
     int32_t ret = 0;
     int8_t i;
+    int32_t end_sample_num = ((sample_rate * 60) / sec->tempo);
+
 
     for(i = 0; i < os->num_oscillators && i < sec->num_instruments; ++i) {
+        int8_t current_pitch = sec->instruments[i].notes[os->note_num].pitch;
+        int8_t next_pitch;
+        if(sec->num_notes > os->note_num + 1) {
+            next_pitch = sec->instruments[i].notes[os->note_num + 1].pitch;
+        } else {
+            next_pitch = 0;
+        }
         if(os->oscillators[i].frequency != 0) {
-            ret += generate_next_osc_sample(os->oscillators + i,
-                                            gaintable[sec->instruments[i].notes[os->note_num].gain]);
+            int32_t sample = generate_next_osc_sample(os->oscillators + i,
+                                                      gaintable[sec->instruments[i].notes[os->note_num].gain]);
+            if(current_pitch != 255 && os->sample_num < envelope_size) {
+                ret += (sample / envelope_size) * (os->sample_num + 1);
+            } else if(next_pitch != 255 && os->sample_num + envelope_size > end_sample_num) {
+                ret += (sample / envelope_size) * (end_sample_num - os->sample_num + 1);
+            } else {
+                ret += sample;
+            }
         }
     }
 
     ++os->sample_num;
-    if(os->sample_num >= ((sample_rate * 60) / sec->tempo)) {
+    if(os->sample_num >= end_sample_num) {
         ++os->note_num;
         printf("note %d\n", os->note_num);
         os->sample_num = 0;
