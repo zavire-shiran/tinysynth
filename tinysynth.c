@@ -94,10 +94,19 @@ typedef struct _oscillator {
     oscillator_type type;
     uint32_t phase;
     int32_t frequency;
+    uint32_t fm_phase;
+    uint32_t fm_freq;
+    int32_t fm_gain;
 } oscillator;
 
 int32_t generate_next_osc_sample(oscillator* osc, int32_t gain) {
-    osc->phase += ((UINT32_MAX / sample_rate) * osc->frequency);
+    if(osc->type != FM) {
+        osc->phase += ((UINT32_MAX / sample_rate) * osc->frequency);
+    } else {
+        osc->fm_phase += ((UINT32_MAX / sample_rate) * osc->fm_freq);
+        int32_t freq = (int32_t)roundf(sinf(2 * pi * ((float)osc->fm_phase / UINT32_MAX)) * osc->fm_gain) + osc->frequency;
+        osc->phase += ((UINT32_MAX / sample_rate) * freq);
+    }
 
     switch(osc->type) {
     case SQUARE:
@@ -129,8 +138,7 @@ int32_t generate_next_osc_sample(oscillator* osc, int32_t gain) {
         break;
 
     case FM:
-        /* AHAHAHAHAHAHAH */
-        return 0;
+        return (int32_t)roundf(sinf(2 * pi * ((float)osc->phase / UINT32_MAX)) * gain);
         break;
 
     default:
@@ -146,6 +154,7 @@ typedef struct _note {
 
 typedef struct _instrument {
     oscillator_type type;
+    int16_t fm_numerator, fm_denominator, fm_gain;
     note* notes; // size is section.num_notes
 } instrument;
 
@@ -232,6 +241,10 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
                     printf("osc %d pitch %d gain %d\n", i, pitch, gain);
                     os->oscillators[i].frequency = freqtable[pitch];
                     os->oscillators[i].phase = 0;
+                    if(sec->instruments[i].type == FM) {
+                        os->oscillators[i].fm_freq = (os->oscillators[i].frequency / sec->instruments[i].fm_denominator) *  sec->instruments[i].fm_numerator;
+                        os->oscillators[i].fm_gain = sec->instruments[i].fm_gain;
+                    }
                 }
             }
         }
@@ -249,6 +262,10 @@ void setup_output_state_for_section(output_state* os, section* sec) {
             printf("osc %d pitch %d gain %d\n", i, pitch, gain);
             os->oscillators[i].frequency = freqtable[pitch];
             os->oscillators[i].phase = 0;
+            if(sec->instruments[i].type == FM) {
+                os->oscillators[i].fm_freq = (os->oscillators[i].frequency / sec->instruments[i].fm_denominator) *  sec->instruments[i].fm_numerator;
+                os->oscillators[i].fm_gain = sec->instruments[i].fm_gain;
+            }
         } else {
             os->oscillators[i].frequency = 0;
             os->oscillators[i].phase = 0;
@@ -271,8 +288,14 @@ void populate_test_section_one(section* sec) {
         }
     }
 
-    sec->instruments[0].type = TRIANGLE;
-    sec->instruments[1].type = TRIANGLE;
+    sec->instruments[0].type = FM;
+    sec->instruments[0].fm_numerator = 1;
+    sec->instruments[0].fm_denominator = 1;
+    sec->instruments[0].fm_gain = 100;
+    sec->instruments[1].type = FM;
+    sec->instruments[1].fm_numerator = 1;
+    sec->instruments[1].fm_denominator = 1;
+    sec->instruments[1].fm_gain = 200;
     sec->instruments[2].type = TRIANGLE;
     sec->instruments[3].type = TRIANGLE;
 
@@ -342,8 +365,14 @@ void populate_test_section_two(section* sec) {
         }
     }
 
-    sec->instruments[0].type = TRIANGLE;
-    sec->instruments[1].type = TRIANGLE;
+    sec->instruments[0].type = FM;
+    sec->instruments[0].fm_numerator = 1;
+    sec->instruments[0].fm_denominator = 1;
+    sec->instruments[0].fm_gain = 200;
+    sec->instruments[1].type = FM;
+    sec->instruments[1].fm_numerator = 1;
+    sec->instruments[1].fm_denominator = 1;
+    sec->instruments[1].fm_gain = 100;
 
     sec->instruments[0].notes[0].pitch = 72;
     sec->instruments[0].notes[1].pitch = 71;
