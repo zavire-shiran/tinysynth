@@ -157,14 +157,18 @@ typedef struct _section {
 } section;
 
 typedef struct _composition {
+    int32_t num_play_order;
+    int32_t* play_order;
     int32_t num_sections;
     section* sections;
 } composition;
 
 typedef struct _output_state {
     int8_t is_playing;
+    int8_t section_playing;
     int8_t note_num;
     int32_t sample_num;
+    int32_t section_num;
     int8_t num_oscillators;
     oscillator* oscillators;
 } output_state;
@@ -172,7 +176,9 @@ typedef struct _output_state {
 output_state* create_output_state(int8_t num_oscillators) {
     output_state* ret = calloc(sizeof(output_state), 1);
     ret->is_playing = 1;
+    ret->section_playing = 1;
     ret->num_oscillators = num_oscillators;
+    ret->section_num = 0;
     ret->oscillators = calloc(sizeof(oscillator), num_oscillators);
     return ret;
 }
@@ -213,7 +219,7 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
         os->sample_num = 0;
 
         if(os->note_num >= sec->num_notes) {
-            os->is_playing = 0;
+            os->section_playing = 0;
         } else {
             for(i = 0; i < os->num_oscillators; ++i) {
                 if(i >= sec->num_instruments) {
@@ -234,15 +240,32 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
     return ret;
 }
 
-void populate_test_section(section* sec) {
+void setup_output_state_for_section(output_state* os, section* sec) {
+    for(int i = 0; i < os->num_oscillators; ++i) {
+        if(i < sec->num_instruments) {
+            os->oscillators[i].type = sec->instruments[i].type;
+            uint8_t pitch = sec->instruments[i].notes[os->note_num].pitch;
+            uint8_t gain = sec->instruments[i].notes[os->note_num].gain;
+            printf("osc %d pitch %d gain %d\n", i, pitch, gain);
+            os->oscillators[i].frequency = freqtable[pitch];
+            os->oscillators[i].phase = 0;
+        } else {
+            os->oscillators[i].frequency = 0;
+            os->oscillators[i].phase = 0;
+        }
+    }
+
+}
+
+void populate_test_section_one(section* sec) {
     sec->tempo = 240;
     sec->num_instruments = 4;
-    sec->num_notes = 34;
+    sec->num_notes = 32;
     sec->instruments = calloc(sizeof(instrument), 4);
 
     for(int i = 0; i < 4; ++i) {
-        sec->instruments[i].notes = calloc(sizeof(note), 34);
-        for(int j = 0; j < 34; ++j) {
+        sec->instruments[i].notes = calloc(sizeof(note), 32);
+        for(int j = 0; j < 32; ++j) {
             sec->instruments[i].notes[j].pitch = 255;
             sec->instruments[i].notes[j].gain = 25;
         }
@@ -269,7 +292,6 @@ void populate_test_section(section* sec) {
     sec->instruments[0].notes[26].pitch = 55;
     sec->instruments[0].notes[28].pitch = 48;
     sec->instruments[0].notes[30].pitch = 55;
-    sec->instruments[0].notes[32].pitch = 48;
 
     sec->instruments[1].notes[0].pitch = 60;
     sec->instruments[1].notes[1].pitch = 62;
@@ -306,26 +328,118 @@ void populate_test_section(section* sec) {
     sec->instruments[3].notes[0].pitch = 0;
 }
 
+void populate_test_section_two(section* sec) {
+    sec->tempo = 240;
+    sec->num_instruments = 4;
+    sec->num_notes = 32;
+    sec->instruments = calloc(sizeof(instrument), 4);
+
+    for(int i = 0; i < 4; ++i) {
+        sec->instruments[i].notes = calloc(sizeof(note), 32);
+        for(int j = 0; j < 32; ++j) {
+            sec->instruments[i].notes[j].pitch = 255;
+            sec->instruments[i].notes[j].gain = 25;
+        }
+    }
+
+    sec->instruments[0].type = TRIANGLE;
+    sec->instruments[1].type = TRIANGLE;
+
+    sec->instruments[0].notes[0].pitch = 72;
+    sec->instruments[0].notes[1].pitch = 71;
+    sec->instruments[0].notes[2].pitch = 72;
+    sec->instruments[0].notes[3].pitch = 0;
+    sec->instruments[0].notes[4].pitch = 67;
+    sec->instruments[0].notes[5].pitch = 65;
+    sec->instruments[0].notes[6].pitch = 67;
+    sec->instruments[0].notes[7].pitch = 0;
+
+    sec->instruments[0].notes[8].pitch = 64;
+    sec->instruments[0].notes[9].pitch = 62;
+    sec->instruments[0].notes[10].pitch = 64;
+    sec->instruments[0].notes[11].pitch = 0;
+    sec->instruments[0].notes[12].pitch = 60;
+    sec->instruments[0].notes[15].pitch = 0;
+
+    sec->instruments[0].notes[16].pitch = 60;
+    sec->instruments[0].notes[17].pitch = 64;
+    sec->instruments[0].notes[18].pitch = 67;
+    sec->instruments[0].notes[19].pitch = 65;
+    sec->instruments[0].notes[20].pitch = 64;
+    sec->instruments[0].notes[21].pitch = 62;
+    sec->instruments[0].notes[22].pitch = 64;
+
+    sec->instruments[0].notes[24].pitch = 65;
+    sec->instruments[0].notes[25].pitch = 62;
+    sec->instruments[0].notes[26].pitch = 59;
+    sec->instruments[0].notes[27].pitch = 62;
+    sec->instruments[0].notes[28].pitch = 60;
+    sec->instruments[0].notes[29].pitch = 59;
+    sec->instruments[0].notes[30].pitch = 60;
+    sec->instruments[0].notes[31].pitch = 0;
+
+    sec->instruments[1].notes[0].pitch = 48;
+    sec->instruments[1].notes[2].pitch = 55;
+    sec->instruments[1].notes[4].pitch = 52;
+    sec->instruments[1].notes[6].pitch = 55;
+
+    sec->instruments[1].notes[8].pitch = 48;
+    sec->instruments[1].notes[10].pitch = 55;
+    sec->instruments[1].notes[12].pitch = 52;
+    sec->instruments[1].notes[14].pitch = 55;
+
+    sec->instruments[1].notes[16].pitch = 48;
+    sec->instruments[1].notes[18].pitch = 55;
+    sec->instruments[1].notes[20].pitch = 52;
+    sec->instruments[1].notes[22].pitch = 55;
+
+    sec->instruments[1].notes[24].pitch = 48;
+    sec->instruments[1].notes[26].pitch = 55;
+    sec->instruments[1].notes[28].pitch = 52;
+    sec->instruments[1].notes[30].pitch = 55;
+
+    sec->instruments[2].notes[0].pitch = 0;
+    sec->instruments[3].notes[0].pitch = 0;
+    
+}
+
+void populate_test_composition(composition* comp) {
+    comp->num_play_order = 3;
+    comp->play_order = calloc(sizeof(int32_t), 3);
+    comp->play_order[0] = 0;
+    comp->play_order[1] = 1;
+    comp->play_order[0] = 0;
+
+    comp->num_sections = 2;
+    comp->sections = calloc(sizeof(section), 2);
+    populate_test_section_one(comp->sections);
+    populate_test_section_two(comp->sections + 1);
+}
+
 int main(int argc, char** argv) {
     FILE* outfile = fopen("sound.s32", "w");
-    section sec;
+    composition comp;
     output_state* os = create_output_state(16);
     /*writeAiffHeader(outfile, 1, 44100, 16, 44100.0);*/
 
-    populate_test_section(&sec);
-
-    for(int i = 0; i < os->num_oscillators && i < sec.num_instruments; ++i) {
-        os->oscillators[i].type = sec.instruments[i].type;
-        uint8_t pitch = sec.instruments[i].notes[os->note_num].pitch;
-        uint8_t gain = sec.instruments[i].notes[os->note_num].gain;
-        printf("osc %d pitch %d gain %d\n", i, pitch, gain);
-        os->oscillators[i].frequency = freqtable[pitch];
-        os->oscillators[i].phase = 0;
-    }
+    populate_test_composition(&comp);
+    setup_output_state_for_section(os, comp.sections + comp.play_order[0]);
 
     while(os->is_playing) {
-        int32_t signal = generate_next_section_sample(os, &sec);
+        int32_t signal = generate_next_section_sample(os, comp.sections + comp.play_order[os->section_num]);
         fwrite(&signal, 1, sizeof(signal), outfile);
+
+        if(!os->section_playing) {
+            os->section_num++;
+            if(os->section_num < comp.num_play_order) {
+                os->section_playing = 1;
+                os->note_num = 0;
+                os->sample_num = 0;
+                setup_output_state_for_section(os, comp.sections + comp.play_order[os->section_num]);
+            } else {
+                os->is_playing = 0;
+            }
+        }
     }
 
     fclose(outfile);
