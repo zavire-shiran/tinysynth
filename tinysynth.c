@@ -177,7 +177,7 @@ output_state* create_output_state(int8_t num_oscillators) {
     return ret;
 }
 
-const int16_t envelope_size = 40;
+const int16_t envelope_size = 400;
 
 int32_t generate_next_section_sample(output_state* os, section* sec) {
     int32_t ret = 0;
@@ -186,8 +186,8 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
 
 
     for(i = 0; i < os->num_oscillators && i < sec->num_instruments; ++i) {
-        int8_t current_pitch = sec->instruments[i].notes[os->note_num].pitch;
-        int8_t next_pitch;
+        uint8_t current_pitch = sec->instruments[i].notes[os->note_num].pitch;
+        uint8_t next_pitch;
         if(sec->num_notes > os->note_num + 1) {
             next_pitch = sec->instruments[i].notes[os->note_num + 1].pitch;
         } else {
@@ -295,7 +295,13 @@ void populate_test_section(section* sec) {
     sec->instruments[1].notes[27].pitch = 0;
     sec->instruments[1].notes[28].pitch = 60;
 
+
     sec->instruments[2].notes[0].pitch = 0;
+/*    sec->instruments[2].notes[2].pitch = 52;
+    sec->instruments[2].notes[4].pitch = 52;
+    sec->instruments[2].notes[6].pitch = 52;
+    sec->instruments[2].notes[8].pitch = 52;
+    sec->instruments[2].notes[10].pitch = 52;*/
 
     sec->instruments[3].notes[0].pitch = 0;
 }
