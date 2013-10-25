@@ -1,13 +1,13 @@
 import curses
 import curses.ascii
 
-notenames = ['C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A', 'A#', 'B']
+notenames = ['C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A ', 'A#', 'B ']
 notevals = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-def noteval2text(noteval):
-    octave = noteval / 12
-    note = noteval % 12
-    return notenames[note] + str(octave)
+def pitch2text(pitch):
+    octave = pitch / 12
+    note = pitch % 12
+    return '%s%2i' % (notenames[note], octave)
 
 class note(object):
     def __init__(self, pitch, gain):
@@ -30,6 +30,9 @@ class instrument(object):
     def add_note(self):
         self.notes.append(note(0, 20))
 
+    def del_note(self):
+        del self.notes[-1]
+
 
 class section(object):
     def __init__(self):
@@ -44,6 +47,11 @@ class section(object):
     def add_note(self):
         for inst in self.instruments:
             inst.add_note()
+
+    def del_note(self):
+        if self.num_notes > 0:
+            for instr in self.instruments:
+                instr.del_note()
 
     @property
     def num_instruments(self):
@@ -109,7 +117,7 @@ class section_edit(object):
     def draw(self, window):
         window.clear()
         window.addstr(2, 0, 'Octave: %i' % self.octave)
-
+        window.addstr(2, 15, 'Tempo: %i' % self.section.tempo)
         for instr_n, instr in enumerate(self.section.instruments):
             x = instr_n * 10 + 2
             window.addstr(3, x, str(instr.instr_type))
@@ -123,7 +131,7 @@ class section_edit(object):
                 elif note.pitch == 255:
                     window.addstr(y, x, '|||| %3i' % note.gain)
                 else:
-                    window.addstr(y, x, '%4s %3i' % (noteval2text(note.pitch), note.gain))
+                    window.addstr(y, x, '%4s %3i' % (pitch2text(note.pitch), note.gain))
                 if self.note_selection == note_n and self.instr_selection == instr_n:
                     window.attroff(curses.A_REVERSE)
 
@@ -167,6 +175,16 @@ class section_edit(object):
             self.set_current_note_sustain()
         elif key == ord('x'):
             self.set_current_note_off()
+        elif key == ord(','):
+            self.section.tempo = max(20, self.section.tempo - 1)
+        elif key == ord('.'):
+            self.section.tempo = min(500, self.section.tempo + 1)
+        elif key == ord('m'):
+            self.section.add_note()
+            self.note_selection = max(0, self.note_selection)
+        elif key == ord('n'):
+            self.section.del_note()
+            self.note_selection = min(self.section.num_notes - 1, self.note_selection)
         elif key in keybindings:
             self.set_current_note_pitch(keybindings[key], self.octave)
         return self
