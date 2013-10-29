@@ -123,15 +123,21 @@ class section_edit(object):
             window.addstr(3, x, str(instr.instr_type))
 
             for note_n, note in enumerate(instr.notes):
+                y = note_n + 4
+
+                if instr_n == 0:
+                    window.addstr(y, 0, str(note_n + 1))
+
                 if self.note_selection == note_n and self.instr_selection == instr_n:
                     window.attron(curses.A_REVERSE)
-                y = note_n + 4
+
                 if note.pitch == 0:
                     window.addstr(y, x, '---- ---')
                 elif note.pitch == 255:
                     window.addstr(y, x, '|||| %3i' % note.gain)
                 else:
                     window.addstr(y, x, '%4s %3i' % (pitch2text(note.pitch), note.gain))
+
                 if self.note_selection == note_n and self.instr_selection == instr_n:
                     window.attroff(curses.A_REVERSE)
 
@@ -187,6 +193,8 @@ class section_edit(object):
             self.note_selection = min(self.section.num_notes - 1, self.note_selection)
         elif key in keybindings:
             self.set_current_note_pitch(keybindings[key], self.octave)
+        elif key == ord('Q'):
+            return composition_overview(cur_comp)
         return self
 
 
@@ -217,6 +225,8 @@ class composition_overview(object):
             self.selected_section = max(0, self.selected_section - 1)
         elif key == curses.ascii.NL:
             return section_edit(self.composition.sections[self.selected_section])
+        elif key == ord('Q'):
+            return None
         return self
 
 cur_comp = composition()
@@ -230,18 +240,12 @@ try:
     rootwindow.keypad(1)
     rootwindow.leaveok(1)
 
-    interface_state.draw(rootwindow)
-
     running = True
 
-    while running:
-        key = rootwindow.getch()
-        if key == ord('Q'):
-            running = False
-        else:
-            interface_state = interface_state.oninput(key)
-
+    while interface_state != None:
         interface_state.draw(rootwindow)
+        key = rootwindow.getch()
+        interface_state = interface_state.oninput(key)
 
 finally:
     curses.endwin()
