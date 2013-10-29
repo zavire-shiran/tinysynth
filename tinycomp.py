@@ -44,6 +44,10 @@ class section(object):
         while self.instruments[-1].num_notes < self.num_notes:
             self.instruments[-1].add_note()
 
+    def del_instrument(self, instr_num):
+        if instr_num < len(self.instruments):
+            del self.instruments[instr_num]
+
     def add_note(self):
         for inst in self.instruments:
             inst.add_note()
@@ -191,6 +195,11 @@ class section_edit(object):
         elif key == ord('n'):
             self.section.del_note()
             self.note_selection = min(self.section.num_notes - 1, self.note_selection)
+        elif key == ord('M'):
+            self.section.add_instrument()
+        elif key == ord('D'):
+            self.section.del_instrument(self.instr_selection)
+            self.instr_selection = min(self.section.num_instruments - 1, self.instr_selection)
         elif key in keybindings:
             self.set_current_note_pitch(keybindings[key], self.octave)
         elif key == ord('Q'):
