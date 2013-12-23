@@ -4,6 +4,8 @@ import curses.ascii
 notenames = ['C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A ', 'A#', 'B ']
 notevals = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
+oscillatortypes = ['square', 'sawtooth', 'triangle', 'sine'] # leaving out FM for now because UI is complicated.
+
 def pitch2text(pitch):
     octave = pitch / 12
     note = pitch % 12
@@ -211,29 +213,78 @@ class composition_overview(object):
     def __init__(self, comp):
         self.composition = comp
         self.selected_section = 0
+        self.selected_column = 0
+        self.grabbed_selection = False
 
     def draw(self, window):
         window.erase()
 
         window.addstr(0, 0, 'Sections: %4i   Play order length: %4i' % (self.composition.num_sections,
                                                                         self.composition.play_order_length))
+        window.addstr(1, 0, 'Sections')
+        window.addstr(1, 42, '|')
+        window.addstr(1, 45, 'Play order')
 
         for n, sec in enumerate(self.composition.sections):
-            if n == self.selected_section:
+            if self.selected_column == 0 and n == self.selected_section:
                 window.attron(curses.A_REVERSE)
             window.addstr(2+n, 0, '%03i Section  %5i notes  %2i instruments' % (n, sec.num_notes, sec.num_instruments))
-            if n == self.selected_section:
+            if self.selected_column == 0 and n == self.selected_section:
                 window.attroff(curses.A_REVERSE)
+
+        for n, secn in enumerate(self.composition.play_order):
+            if self.selected_column == 1 and n == self.selected_section:
+                window.attron(curses.A_REVERSE)
+            sec = self.composition.sections[secn]
+            window.addstr(2+n, 45, '%03i Section  %5i notes  %2i instruments' % (secn, sec.num_notes, sec.num_instruments))
+            if self.selected_column == 1 and n == self.selected_section:
+                window.attroff(curses.A_REVERSE)
+
+
+        for n in xrange(max(self.composition.num_sections, self.composition.play_order_length)):
+            window.addstr(2+n, 42, '|')
 
     def oninput(self, key):
         if key == ord('n'):
             cur_comp.add_section()
+        if key == ord('l'):
+            if self.selected_column == 0:
+                self.composition.play_order.append(self.selected_section)
+                self.selected_column = 1
+                self.selected_section = self.composition.play_order_length - 1
         elif key == curses.KEY_DOWN:
-            self.selected_section = min(self.composition.num_sections - 1, self.selected_section + 1)
+            if self.selected_column == 1:
+                if self.grabbed_selection:
+                    if self.selected_section < self.composition.play_order_length - 1:
+                        temp = self.composition.play_order[self.selected_section]
+                        self.composition.play_order[self.selected_section] = self.composition.play_order[self.selected_section + 1]
+                        self.composition.play_order[self.selected_section + 1] = temp
+                        self.selected_section += 1
+                else:
+                    self.selected_section = min(self.composition.play_order_length - 1, self.selected_section + 1)
+            elif self.selected_column == 0:
+                self.selected_section = min(self.composition.num_sections - 1, self.selected_section + 1)
         elif key == curses.KEY_UP:
-            self.selected_section = max(0, self.selected_section - 1)
+            if self.selected_column == 1:
+                if self.grabbed_selection:
+                    if self.selected_section > 0:
+                        temp = self.composition.play_order[self.selected_section]
+                        self.composition.play_order[self.selected_section] = self.composition.play_order[self.selected_section - 1]
+                        self.composition.play_order[self.selected_section - 1] = temp
+                        self.selected_section -= 1
+                else:
+                    self.selected_section = max(0, self.selected_section - 1)
+            elif self.selected_column == 0:
+                self.selected_section = max(0, self.selected_section - 1)
+        elif key == curses.KEY_LEFT or key == curses.KEY_RIGHT:
+            if self.composition.play_order_length > 0:
+                self.selected_column = (self.selected_column + 1) % 2
+                self.selected_section = 0
         elif key == curses.ascii.NL:
-            return section_edit(self.composition.sections[self.selected_section])
+            if self.selected_column == 0:
+                return section_edit(self.composition.sections[self.selected_section])
+            if self.selected_column == 1:
+                self.grabbed_selection = not self.grabbed_selection
         elif key == ord('Q'):
             return None
         return self

@@ -288,11 +288,11 @@ void populate_test_section_one(section* sec) {
         }
     }
 
-    sec->instruments[0].type = FM;
+    sec->instruments[0].type = TRIANGLE;
     sec->instruments[0].fm_numerator = 1;
     sec->instruments[0].fm_denominator = 1;
     sec->instruments[0].fm_gain = 100;
-    sec->instruments[1].type = FM;
+    sec->instruments[1].type = TRIANGLE;
     sec->instruments[1].fm_numerator = 1;
     sec->instruments[1].fm_denominator = 1;
     sec->instruments[1].fm_gain = 200;
@@ -365,11 +365,11 @@ void populate_test_section_two(section* sec) {
         }
     }
 
-    sec->instruments[0].type = FM;
+    sec->instruments[0].type = TRIANGLE;
     sec->instruments[0].fm_numerator = 1;
     sec->instruments[0].fm_denominator = 1;
     sec->instruments[0].fm_gain = 200;
-    sec->instruments[1].type = FM;
+    sec->instruments[1].type = TRIANGLE;
     sec->instruments[1].fm_numerator = 1;
     sec->instruments[1].fm_denominator = 1;
     sec->instruments[1].fm_gain = 100;
