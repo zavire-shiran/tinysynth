@@ -42,7 +42,7 @@ class section(object):
         self.instruments = []
 
     def add_instrument(self):
-        self.instruments.append(instrument('sine'))
+        self.instruments.append(instrument(0))
         while self.instruments[-1].num_notes < self.num_notes:
             self.instruments[-1].add_note()
 
@@ -126,7 +126,7 @@ class section_edit(object):
         window.addstr(2, 15, 'Tempo: %i' % self.section.tempo)
         for instr_n, instr in enumerate(self.section.instruments):
             x = instr_n * 10 + 2
-            window.addstr(3, x, str(instr.instr_type))
+            window.addstr(3, x, oscillatortypes[instr.instr_type])
 
             for note_n, note in enumerate(instr.notes):
                 y = note_n + 4
@@ -202,6 +202,8 @@ class section_edit(object):
         elif key == ord('D'):
             self.section.del_instrument(self.instr_selection)
             self.instr_selection = min(self.section.num_instruments - 1, self.instr_selection)
+        elif key == ord('I'):
+            self.section.instruments[self.instr_selection].instr_type = (self.section.instruments[self.instr_selection].instr_type + 1) % len(oscillatortypes)
         elif key in keybindings:
             self.set_current_note_pitch(keybindings[key], self.octave)
         elif key == ord('Q'):
@@ -252,6 +254,13 @@ class composition_overview(object):
                 self.composition.play_order.append(self.selected_section)
                 self.selected_column = 1
                 self.selected_section = self.composition.play_order_length - 1
+            elif self.selected_column == 1:
+                if self.composition.play_order_length > 0:
+                    del self.composition.play_order[self.selected_section]
+                    self.selected_section = min(self.selected_section, self.composition.play_order_length - 1)
+                    if self.selected_section == -1:
+                        self.selected_column = 0
+                        self.selected_section = 0
         elif key == curses.KEY_DOWN:
             if self.selected_column == 1:
                 if self.grabbed_selection:

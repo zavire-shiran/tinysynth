@@ -83,11 +83,11 @@ const int32_t gaintable[] = {0,
                              0xc0000000};
 
 typedef enum _oscillator_type {
-    SQUARE,
-    SAWTOOTH,
-    TRIANGLE,
-    SINE,
-    FM
+    SQUARE = 0,
+    SAWTOOTH = 1,
+    TRIANGLE = 2,
+    SINE = 3,
+    FM = 4
 } oscillator_type;
 
 typedef struct _oscillator {
