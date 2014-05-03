@@ -1,15 +1,19 @@
 import curses
 import curses.ascii
+import struct
+
 
 notenames = ['C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A ', 'A#', 'B ']
 notevals = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 oscillatortypes = ['square', 'sawtooth', 'triangle', 'sine'] # leaving out FM for now because UI is complicated.
 
+
 def pitch2text(pitch):
     octave = pitch / 12
     note = pitch % 12
     return '%s%2i' % (notenames[note], octave)
+
 
 class note(object):
     def __init__(self, pitch, gain):
@@ -18,7 +22,7 @@ class note(object):
 
 
 class instrument(object):
-    def __init__(self, instr_type, fm_numerator = None, fm_denominator = None, fm_gain = None):
+    def __init__(self, instr_type, fm_numerator = 1, fm_denominator = 1, fm_gain = 0):
         self.instr_type = instr_type
         self.fm_numerator = fm_numerator
         self.fm_denominator = fm_denominator
@@ -34,6 +38,11 @@ class instrument(object):
 
     def del_note(self):
         del self.notes[-1]
+
+    def binary_rep(self):
+        header = struct.pack("bhhh", self.instr_type, self.fm_numerator, self.fm_denominator, self.fm_gain)
+        notes = [struct.pack("BB", n.pitch, n.gain) for n in self.notes]
+        return header + ''.join(notes)
 
 
 class section(object):
@@ -59,6 +68,11 @@ class section(object):
             for instr in self.instruments:
                 instr.del_note()
 
+    def binary_rep(self):
+        header = struct.pack("hbb", self.tempo, self.num_instruments, self.num_notes)
+        binary_instruments = [i.binary_rep() for i in self.instruments]
+        return header + ''.join(binary_instruments)
+
     @property
     def num_instruments(self):
         return len(self.instruments)
@@ -80,6 +94,14 @@ class composition(object):
 
     def add_section(self):
         self.sections.append(section())
+
+    def binary_rep(self):
+        header = "TINYSYNTH" + struct.pack("ii", self.num_sections, self.play_order_length)
+        for po in self.play_order:
+            header += struct.pack("i", po)
+        binary_sections = [s.binary_rep() for s in self.sections]
+        return header + ''.join(binary_sections)
+            
 
     @property
     def num_sections(self):
@@ -294,6 +316,10 @@ class composition_overview(object):
                 return section_edit(self.composition.sections[self.selected_section])
             if self.selected_column == 1:
                 self.grabbed_selection = not self.grabbed_selection
+        elif key == ord('S'):
+            f = open('tinyout.cmp', 'w')
+            f.write(self.composition.binary_rep())
+            f.close()
         elif key == ord('Q'):
             return None
         return self

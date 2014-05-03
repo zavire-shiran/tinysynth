@@ -48,39 +48,32 @@ const int32_t freqtable[] = {0, 8, 9, 9, 10, 10, 11, 12, 12, 13, 14, 15, 16,
                              14417920, 15275254, 16183568, 17145893, 18165440,
                              19245614};
 
-const int32_t gaintable[] = {0,
-                             0x10000,
-                             0x18000,
-                             0x20000,
-                             0x30000,
-                             0x40000,
-                             0x60000,
-                             0x80000,
-                             0xc0000,
-                             0x100000,
-                             0x180000,
-                             0x200000,
-                             0x300000,
-                             0x400000,
-                             0x600000,
-                             0x800000,
-                             0xc00000,
-                             0x1000000,
-                             0x1800000,
-                             0x2000000,
-                             0x3000000,
-                             0x4000000,
-                             0x6000000,
-                             0x8000000,
-                             0xc000000,
-                             0x10000000,
-                             0x18000000,
-                             0x20000000,
-                             0x30000000,
-                             0x40000000,
-                             0x60000000,
-                             0x80000000,
-                             0xc0000000};
+/* Still not entirely happy with this, but it's better than what came before. */
+const int32_t gaintable[] = {0x0, 0x2666666, 0x4cccccc, 0x7333333, 0x9999999,
+			     0xc000000, 0xe666666, 0x10cccccc, 0x13333333,
+			     0x15999999, 0x18000000, 0x1a666666, 0x1ccccccc,
+			     0x1f333333, 0x21999999, 0x24000000, 0x26666666,
+			     0x28cccccc, 0x2b333333, 0x2d999999, 0x30000000,
+			     0x32666666, 0x34cccccc, 0x37333333, 0x39999999,
+			     0x3c000000, 0x3e666666, 0x40cccccc, 0x43333333,
+			     0x45999999, 0x48000000, 0x4a666666, 0x4ccccccc,
+			     0x4f333333, 0x51999999, 0x54000000, 0x56666666,
+			     0x58cccccc, 0x5b333333, 0x5d999999, 0x60000000,
+			     0x62666666, 0x64cccccc, 0x67333333, 0x69999999,
+			     0x6c000000, 0x6e666666, 0x70cccccc, 0x73333333,
+			     0x75999999, 0x78000000, 0x7a666666, 0x7ccccccc,
+			     0x7f333333, 0x81999999, 0x84000000, 0x86666666,
+			     0x88cccccc, 0x8b333333, 0x8d999999, 0x90000000,
+			     0x92666666, 0x94cccccc, 0x97333333, 0x99999999,
+			     0x9c000000, 0x9e666666, 0xa0cccccc, 0xa3333333,
+			     0xa5999999, 0xa8000000, 0xaa666666, 0xaccccccc,
+			     0xaf333333, 0xb1999999, 0xb4000000, 0xb6666666,
+			     0xb8cccccc, 0xbb333333, 0xbd999999, 0xc0000000,
+			     0xc2666666, 0xc4cccccc, 0xc7333333, 0xc9999999,
+			     0xcc000000, 0xce666666, 0xd0cccccc, 0xd3333333,
+			     0xd5999999, 0xd8000000, 0xda666666, 0xdccccccc,
+			     0xdf333333, 0xe1999999, 0xe4000000, 0xe6666666,
+			     0xe8cccccc, 0xeb333333, 0xed999999, 0xf0000000};
 
 typedef enum _oscillator_type {
     SQUARE = 0,
@@ -284,7 +277,7 @@ void populate_test_section_one(section* sec) {
         sec->instruments[i].notes = calloc(sizeof(note), 32);
         for(int j = 0; j < 32; ++j) {
             sec->instruments[i].notes[j].pitch = 255;
-            sec->instruments[i].notes[j].gain = 25;
+            sec->instruments[i].notes[j].gain = 18;
         }
     }
 
@@ -361,7 +354,7 @@ void populate_test_section_two(section* sec) {
         sec->instruments[i].notes = calloc(sizeof(note), 32);
         for(int j = 0; j < 32; ++j) {
             sec->instruments[i].notes[j].pitch = 255;
-            sec->instruments[i].notes[j].gain = 25;
+            sec->instruments[i].notes[j].gain = 23;
         }
     }
 
