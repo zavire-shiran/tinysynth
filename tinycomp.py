@@ -40,7 +40,7 @@ class instrument(object):
         del self.notes[-1]
 
     def binary_rep(self):
-        header = struct.pack("bhhh", self.instr_type, self.fm_numerator, self.fm_denominator, self.fm_gain)
+        header = struct.pack("=bhhh", self.instr_type, self.fm_numerator, self.fm_denominator, self.fm_gain)
         notes = [struct.pack("BB", n.pitch, n.gain) for n in self.notes]
         return header + ''.join(notes)
 

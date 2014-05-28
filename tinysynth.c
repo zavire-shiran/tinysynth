@@ -84,7 +84,7 @@ typedef enum _oscillator_type {
 } oscillator_type;
 
 typedef struct _oscillator {
-    oscillator_type type;
+    int8_t type;
     uint32_t phase;
     int32_t frequency;
     uint32_t fm_phase;
@@ -146,7 +146,7 @@ typedef struct _note {
 } note;
 
 typedef struct _instrument {
-    oscillator_type type;
+    int8_t type;
     int16_t fm_numerator, fm_denominator, fm_gain;
     note* notes; // size is section.num_notes
 } instrument;
@@ -235,7 +235,7 @@ int32_t generate_next_section_sample(output_state* os, section* sec) {
                     os->oscillators[i].frequency = freqtable[pitch];
                     os->oscillators[i].phase = 0;
                     if(sec->instruments[i].type == FM) {
-                        os->oscillators[i].fm_freq = (os->oscillators[i].frequency / sec->instruments[i].fm_denominator) *  sec->instruments[i].fm_numerator;
+                        os->oscillators[i].fm_freq = (os->oscillators[i].frequency / sec->instruments[i].fm_denominator) * sec->instruments[i].fm_numerator;
                         os->oscillators[i].fm_gain = sec->instruments[i].fm_gain;
                     }
                 }
@@ -430,7 +430,7 @@ void populate_test_composition(composition* comp) {
     comp->play_order = calloc(sizeof(int32_t), 3);
     comp->play_order[0] = 0;
     comp->play_order[1] = 1;
-    comp->play_order[0] = 0;
+    comp->play_order[2] = 0;
 
     comp->num_sections = 2;
     comp->sections = calloc(sizeof(section), 2);
@@ -438,13 +438,81 @@ void populate_test_composition(composition* comp) {
     populate_test_section_two(comp->sections + 1);
 }
 
-int main(int argc, char** argv) {
-    FILE* outfile = fopen("sound.s32", "w");
-    composition comp;
-    output_state* os = create_output_state(16);
-    /*writeAiffHeader(outfile, 1, 44100, 16, 44100.0);*/
+composition read_from_file(char* filename) {
+    FILE* infile = fopen(filename, "r");
 
-    populate_test_composition(&comp);
+    char header[7];
+
+    fread(header, 1, 9, infile); /* should be making sure this is "TINYSYNTH" */
+
+    composition comp;
+
+    if(infile == NULL) {
+        return comp;
+    }
+
+    fread(&comp.num_sections, sizeof(comp.num_sections), 1, infile);
+    fread(&comp.num_play_order, sizeof(comp.num_play_order), 1, infile);
+
+    printf("%d, %d\n", comp.num_sections, comp.num_play_order);
+
+    comp.sections = calloc(comp.num_sections, sizeof(*comp.sections));
+    comp.play_order = calloc(comp.num_play_order, sizeof(*comp.play_order));
+
+    fread(comp.play_order, sizeof(*comp.play_order), comp.num_play_order, infile);
+
+    for(int i = 0; i < comp.num_sections; ++i) {
+        printf("section %d\n", i);
+        section* sec = &comp.sections[i];
+        fread(&sec->tempo, sizeof(sec->tempo), 1, infile);
+        fread(&sec->num_instruments, sizeof(sec->num_instruments), 1, infile);
+        fread(&sec->num_notes, sizeof(sec->num_notes), 1, infile);
+        printf("tempo: %d, num instruments: %d, num notes: %d\n", sec->tempo, sec->num_instruments, sec->num_notes);
+
+        sec->instruments = calloc(sec->num_instruments, sizeof(*sec->instruments));
+
+        for(int j = 0; j < sec->num_instruments; ++j) {
+            printf("instrument %d\n", j);
+            instrument* inst = &sec->instruments[j];
+
+            fread(&inst->type, sizeof(inst->type), 1, infile);
+            fread(&inst->fm_numerator, sizeof(inst->fm_numerator), 1, infile);
+            fread(&inst->fm_denominator, sizeof(inst->fm_denominator), 1, infile);
+            fread(&inst->fm_gain, sizeof(inst->fm_gain), 1, infile);
+
+            printf("type: %d, num: %d, den: %d, fm gain: %d\n",
+                   inst->type, inst->fm_numerator, inst->fm_denominator, inst->fm_gain);
+
+            inst->notes = calloc(sec->num_notes, sizeof(*inst->notes));
+
+            for(int k = 0; k < sec->num_notes; ++k) {
+                note* n = &inst->notes[k];
+
+                fread(&n->pitch, sizeof(n->pitch), 1, infile);
+                fread(&n->gain, sizeof(n->gain), 1, infile);
+                printf("note %d, pitch %d, gain %d\n", k, n->pitch, n->gain);
+            }
+        }
+    }
+
+    return comp;
+}
+
+int main(int argc, char** argv) {
+    if(argc != 2) {
+        printf("Incorrect number of arguments.\n");
+        return -1;
+    }
+
+    printf("Reading from file: %s\n", argv[1]);
+
+    composition comp = read_from_file(argv[1]);
+    
+
+    FILE* outfile = fopen("sound.s32", "w");
+    output_state* os = create_output_state(16);
+
+    /*populate_test_composition(&comp);*/
     setup_output_state_for_section(os, comp.sections + comp.play_order[0]);
 
     while(os->is_playing) {
