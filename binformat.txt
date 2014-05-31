@@ -1,0 +1,18 @@
+File starts with a magic number: TINYSYNTH
+
+4 bytes for number of sections
+4 bytes for number of sections in the play order
+4 bytes * number of sections in the play order
+
+Then for each section: (total size 4 + num_instr * (7 + 2 * num_notes))
+2 bytes tempo
+1 byte number of instruments
+1 byte number of notes
+
+for each instrument:
+1 byte oscillator type
+2 bytes each for fm_numerator, fm_denominator, and fm_gain
+
+for each note in instrument:
+1 unsigned byte for pitch
+1 unsigned byte for gain
